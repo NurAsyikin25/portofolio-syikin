@@ -1,0 +1,701 @@
+/* ==========================================================================
+   1. CSS VARIABLES (DESIGN TOKENS)
+   Semua warna diatur di sini. Kalau mau ganti warna website,
+   cukup ubah nilai-nilai di dalam :root (mode terang) dan
+   [data-theme="dark"] (mode gelap).
+   ========================================================================== */
+
+:root {
+  /* --- Mode Terang (default) --- terinspirasi pasir & laut pesisir --- */
+  --bg: #f7f5f0; /* warna latar utama, seperti pasir pantai */
+  --bg-alt: #efebe1; /* latar untuk section selang-seling */
+  --card: #fffffe; /* latar kartu */
+  --ink: #16241f; /* warna teks utama, hijau-hitam pekat */
+  --ink-soft: #58635c; /* warna teks sekunder / deskripsi */
+  --line: #e1ddd1; /* warna garis pembatas tipis */
+  --accent: #1f6f78; /* warna aksen utama: teal laut */
+  --accent-soft: #7ca6a0; /* aksen sekunder yang lebih lembut */
+  --amber: #c98a4b; /* aksen kedua: warna pasir keemasan */
+
+  --shadow: 0 10px 30px -12px rgba(22, 36, 31, 0.15);
+  --radius: 10px;
+}
+
+/* --- Mode Gelap --- terinspirasi laut malam --- */
+[data-theme="dark"] {
+  --bg: #0e1b1d;
+  --bg-alt: #142627;
+  --card: #16292b;
+  --ink: #ece9e0;
+  --ink-soft: #a7b3ad;
+  --line: #223836;
+  --accent: #4fb8ae;
+  --accent-soft: #3a6864;
+  --amber: #e0a458;
+
+  --shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.45);
+}
+
+/* ==========================================================================
+   2. RESET & BASE
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth; /* fallback native smooth scroll, dibantu JS untuk offset navbar */
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Inter", sans-serif;
+  line-height: 1.65;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease; /* transisi halus saat ganti tema */
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+ul {
+  list-style: none;
+}
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* fokus keyboard tetap terlihat jelas (aksesibilitas) */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+/* ==========================================================================
+   3. NAVBAR (STICKY)
+   ========================================================================== */
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+}
+.brand span {
+  color: var(--accent);
+}
+
+/* Menu navigasi disembunyikan default di mobile, muncul sebagai dropdown */
+.nav-links {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: 8px 24px 16px;
+  gap: 4px;
+  transform: translateY(-8px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+/* class "open" ditambahkan lewat JS saat hamburger diklik */
+.nav-links.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.nav-link {
+  padding: 12px 4px;
+  font-size: 15px;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--line);
+  transition: color 0.2s ease;
+}
+.nav-link:hover {
+  color: var(--accent);
+}
+.nav-link:last-child {
+  border-bottom: none;
+}
+
+/* state aktif berdasarkan section yang sedang dilihat (diatur lewat JS) */
+.nav-link.active {
+  color: var(--accent);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --- Tombol theme switcher --- */
+.theme-toggle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+.theme-toggle:hover {
+  transform: rotate(15deg);
+}
+
+/* Ikon matahari/bulan ditukar berdasarkan atribut data-theme di <html> */
+.icon-moon {
+  display: none;
+}
+[data-theme="dark"] .icon-sun {
+  display: none;
+}
+[data-theme="dark"] .icon-moon {
+  display: block;
+}
+
+/* --- Tombol hamburger (mobile) --- */
+.menu-toggle {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.menu-toggle span {
+  width: 16px;
+  height: 2px;
+  background: var(--ink);
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease;
+}
+/* animasi hamburger jadi silang "X" saat menu terbuka (class "open" dari JS) */
+.menu-toggle.open span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.menu-toggle.open span:nth-child(2) {
+  opacity: 0;
+}
+.menu-toggle.open span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Tampilkan menu horizontal biasa di layar lebih besar (tablet ke atas) */
+@media (min-width: 768px) {
+  .nav-links {
+    position: static;
+    flex-direction: row;
+    background: none;
+    border: none;
+    padding: 0;
+    gap: 32px;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .nav-link {
+    padding: 0;
+    border: none;
+    font-size: 14px;
+  }
+  .menu-toggle {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   4. TOMBOL (BUTTON) UMUM
+   ========================================================================== */
+
+.btn {
+  display: inline-block;
+  padding: 13px 24px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--ink);
+}
+
+.btn-outline {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.btn-outline:hover {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+/* ==========================================================================
+   5. HERO SECTION
+   ========================================================================== */
+
+.hero {
+  padding: 72px 0 56px;
+}
+
+.hero-inner {
+  max-width: 640px;
+}
+
+.hero-title {
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 7vw, 3rem);
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+.hero-title em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.hero-role {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  color: var(--amber);
+  margin-bottom: 16px;
+}
+
+.hero-desc {
+  color: var(--ink-soft);
+  font-size: 16px;
+  margin-bottom: 28px;
+  max-width: 48ch;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Pembatas gelombang bertema laut, memisahkan Hero dan Kota */
+.wave-divider {
+  line-height: 0;
+}
+.wave-divider svg {
+  width: 100%;
+  height: 60px;
+  display: block;
+}
+.wave-divider path {
+  fill: var(--bg-alt);
+}
+
+/* ==========================================================================
+   6. SECTION UMUM
+   ========================================================================== */
+
+section {
+  padding: 64px 0;
+}
+
+.section-title {
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.5rem, 5vw, 2.1rem);
+  margin-bottom: 12px;
+  max-width: 20ch;
+}
+
+.section-desc {
+  color: var(--ink-soft);
+  max-width: 55ch;
+  margin-bottom: 40px;
+}
+
+/* ==========================================================================
+   7. CITY SHOWCASE (KOTA ASAL)
+   ========================================================================== */
+
+.city {
+  background: var(--bg-alt);
+}
+
+.city-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-top: 32px;
+}
+
+.city-story p {
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+  font-size: 15.5px;
+}
+.city-story strong {
+  color: var(--ink);
+}
+
+.city-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.city-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.city-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow);
+}
+.city-card-icon {
+  font-size: 22px;
+  display: block;
+  margin-bottom: 10px;
+}
+.city-card h3 {
+  font-family: "Sora", sans-serif;
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+.city-card p {
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  .city-grid {
+    grid-template-columns: 1.1fr 1fr;
+    align-items: start;
+  }
+}
+
+/* ==========================================================================
+   8. LAYANAN (SERVICE GRID)
+   ========================================================================== */
+
+.service-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.service-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 26px;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* Efek hover: kartu naik sedikit + muncul garis aksen di kiri */
+.service-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.3s ease;
+}
+.service-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow);
+  border-color: var(--accent-soft);
+}
+.service-card:hover::before {
+  transform: scaleY(1);
+}
+
+.service-icon {
+  font-size: 26px;
+  display: inline-block;
+  margin-bottom: 14px;
+  transition: transform 0.3s ease;
+}
+.service-card:hover .service-icon {
+  transform: scale(1.15) rotate(-6deg);
+}
+
+.service-card h3 {
+  font-family: "Sora", sans-serif;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.service-card p {
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  margin-bottom: 16px;
+}
+
+.service-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.service-tags li {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--accent);
+  border: 1px solid var(--accent-soft);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+@media (min-width: 640px) {
+  .service-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (min-width: 1024px) {
+  .service-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ==========================================================================
+   9. KONTAK — GAYA "LINK IN BIO"
+   ========================================================================== */
+
+.link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 480px;
+}
+
+.link-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  font-weight: 600;
+  font-size: 15px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+.link-btn:hover {
+  transform: translateX(6px);
+  box-shadow: var(--shadow);
+}
+
+.link-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-alt);
+  flex-shrink: 0;
+}
+
+.link-text {
+  flex: 1;
+}
+.link-arrow {
+  color: var(--ink-soft);
+  transition: transform 0.2s ease;
+}
+.link-btn:hover .link-arrow {
+  transform: translateX(4px);
+}
+
+/* Warna khas tiap platform muncul saat hover, supaya tetap tenang saat idle */
+.link-whatsapp:hover {
+  border-color: #25d366;
+}
+.link-whatsapp:hover .link-icon {
+  background: #25d366;
+  color: #fff;
+}
+
+.link-instagram:hover {
+  border-color: #e1306c;
+}
+.link-instagram:hover .link-icon {
+  background: linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7);
+  color: #fff;
+}
+
+.link-tiktok:hover {
+  border-color: #000;
+}
+[data-theme="dark"] .link-tiktok:hover {
+  border-color: #fff;
+}
+.link-tiktok:hover .link-icon {
+  background: #000;
+  color: #fff;
+}
+
+.link-telegram:hover {
+  border-color: #229ed9;
+}
+.link-telegram:hover .link-icon {
+  background: #229ed9;
+  color: #fff;
+}
+
+/* ==========================================================================
+   10. FOOTER
+   ========================================================================== */
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 24px 0;
+}
+
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.back-to-top {
+  color: var(--accent);
+}
+
+@media (min-width: 640px) {
+  .footer-inner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+/* ==========================================================================
+   11. ANIMASI SCROLL REVEAL
+   Class "reveal" disembunyikan lalu dimunculkan lewat JS (IntersectionObserver)
+   saat elemen masuk ke area layar.
+   ========================================================================== */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hormati preferensi pengguna yang mematikan animasi */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  * {
+    animation: none !important;
+  }
+}
